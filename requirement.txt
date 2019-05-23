@@ -1,0 +1,4 @@
+imutils
+flask
+pillow
+opencv-contrib-python
