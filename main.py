@@ -49,12 +49,16 @@ def video_feed(id):
 def view_json():
     response_data = {}
     response_data['detection'] = []
-
     monitor = request.args.get('id')
-    target_person = request.args.get('targets')
+
     detected_data = Camera().get_json(monitor)
+
+    target_person = []
+    if 'targets' in request.get_json():
+        target_person = request.get_json()['targets']
+        
     # if there are some detected data
-    if len(detected_data['detection']) > 0:
+    if 'detection' in detected_data and len(detected_data['detection']) > 0:
         for data in detected_data['detection']:
             # if detected data in in targeted persons
             if data['name'] in target_person:
