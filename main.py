@@ -3,7 +3,6 @@
 # Project: Video Streaming with Flask
 
 import requests
-from skimage import io
 from train_model import train_model
 from extract_embeddings import extract_data
 from detector_thread import Camera
@@ -11,10 +10,6 @@ from flask import Flask, render_template, Response, request
 import cv2
 import numpy
 import json
-import os
-import sys
-sys.path.insert(
-    '{}/train_scipt'.format(os.path.dirname(os.path.abspath(__file__))))
 
 # from image_detection import detect_image
 
