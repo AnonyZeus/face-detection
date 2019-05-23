@@ -2,24 +2,29 @@
 #
 # Project: Video Streaming with Flask
 
-import json
-import numpy
-import cv2
-from flask import Flask, render_template, Response, request
-from detector_thread import Camera
-# from image_detection import detect_image
-from extract_embeddings import extract_data
-from train_model import train_model
-from skimage import io
 import requests
+from skimage import io
+from train_model import train_model
+from extract_embeddings import extract_data
+from detector_thread import Camera
+from flask import Flask, render_template, Response, request
+import cv2
+import numpy
+import json
+import os
+import sys
+sys.path.insert(
+    '{}/train_scipt'.format(os.path.dirname(os.path.abspath(__file__))))
+
+# from image_detection import detect_image
 
 
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+# UPLOAD_FOLDER = 'uploads'
+# ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 BASE_API = 'http://18.179.207.49/zm/'
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 @app.route('/')
@@ -39,16 +44,28 @@ def gen(camera, monitor):
 
 @app.route('/video_feed/<int:id>')
 def video_feed(id):
-    resp = Response(gen(Camera(), id), 
-        mimetype='multipart/x-mixed-replace; boundary=frame')
+    resp = Response(gen(Camera(), id),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
 
 @app.route('/view_json')
 def view_json():
+    response_data = {}
+    response_data['detection'] = []
+
     monitor = request.args.get('id')
-    resp = Response(Camera().get_json(monitor))
+    target_person = request.args.get('targets')
+    detected_data = Camera().get_json(monitor)
+    # if there are some detected data
+    if len(detected_data['detection']) > 0:
+        for data in detected_data['detection']:
+            # if detected data in in targeted persons
+            if data['name'] in target_person:
+                response_data['detection'].append(data)
+
+    resp = Response(json.dumps(response_data))
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
@@ -65,15 +82,15 @@ def do_training():
 
 @app.route('/change_stream_url', methods=['POST'])
 def change_stream_url():
-    if 'monitor_id' not in request.get_json() or 'auth_id' not in request.get_json():
+    if 'monitor_id' not in request.get_json():
         return Response(json.dumps({'result': 'ng'}))
 
+    stream_url = ''
     monitor = request.get_json()['monitor_id']
-    parsed_auth = request.get_json()['auth_id'].split('=')
-    stream_url = request.get_json()['stream_url']
-    auth = parsed_auth[len(parsed_auth) - 1]
-    url = f'{BASE_API}cgi-bin/nph-zms?scale=100&mode=jpeg&monitor={monitor}&auth={auth}'
-    Camera().change_stream_url(monitor, url, stream_url)
+    if ('stream_url' in request.get_json()):
+        stream_url = request.get_json()['stream_url']
+
+    Camera().change_stream_url(monitor, stream_url)
     return Response(json.dumps({'result': 'ok'}))
 
 
@@ -103,12 +120,11 @@ def confirm_image():
 
     return Response(json.dumps(response_data))
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# def allowed_file(filename):
+#     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 if __name__ == '__main__':
-    #app.run(host='192.168.0.103', debug=True)
     #app.run(host='0.0.0.0', port='5000', debug=True)
-    #app.run(host='0.0.0.0', threaded=True)
-    app.run(host='127.0.0.1', threaded=True)
+    app.run(host='0.0.0.0', threaded=True)
+    # app.run(host='127.0.0.1', threaded=True)
