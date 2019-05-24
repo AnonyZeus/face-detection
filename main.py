@@ -44,17 +44,17 @@ def view_json():
     response_data = {}
     response_data['detection'] = []
     # validate request data
-    if request.is_json is False or 'id' not in request.get_json():
+    if 'id' not in request.args:
         resp = Response(json.dumps(response_data))
         resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
 
-    monitor = request.get_json().get('id')
+    monitor = request.args.get('id')
     detected_data = Camera().get_json(monitor)
     # get list of targeted persons
     target_person = []
-    if request.is_json and 'targets' in request.get_json():
-        target_person = request.get_json()['targets']
+    if 'targets' in request.args:
+        target_person = request.args.get('targets')
     # if there is no target, so track all persons
     if len(target_person) <= 0:
         resp = Response(json.dumps(detected_data))
