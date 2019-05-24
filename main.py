@@ -39,22 +39,22 @@ def video_feed(id):
     return resp
 
 
-@app.route('/view_json')
+@app.route('/view_json', methods=['POST'])
 def view_json():
     response_data = {}
     response_data['detection'] = []
     # validate request data
-    if 'id' not in request.args:
+    if 'id' not in request.form:
         resp = Response(json.dumps(response_data))
         resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
 
-    monitor = request.args.get('id')
+    monitor = request.form['id']
     detected_data = Camera().get_json(monitor)
     # get list of targeted persons
     target_person = []
-    if 'targets' in request.args:
-        target_person = request.args.get('targets')
+    if 'targets' in request.form:
+        target_person = request.form['targets']
     # if there is no target, so track all persons
     if len(target_person) <= 0:
         resp = Response(json.dumps(detected_data))
