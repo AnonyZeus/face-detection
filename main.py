@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Project: Video Streaming with Flask
+# Project: Face Detection System
 
 import requests
 from train_model import train_model
@@ -11,12 +9,8 @@ import cv2
 import numpy
 import json
 
-# from image_detection import detect_image
-
-
 # UPLOAD_FOLDER = 'uploads'
 # ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-BASE_API = 'http://18.179.207.49/zm/'
 
 app = Flask(__name__)
 # app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -49,14 +43,23 @@ def video_feed(id):
 def view_json():
     response_data = {}
     response_data['detection'] = []
-    monitor = request.args.get('id')
+    # validate request data
+    if request.is_json is False or 'id' not in request.get_json():
+        resp = Response(json.dumps(response_data))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
 
+    monitor = request.get_json().get('id')
     detected_data = Camera().get_json(monitor)
-
+    # get list of targeted persons
     target_person = []
     if request.is_json and 'targets' in request.get_json():
         target_person = request.get_json()['targets']
-
+    # if there is no target, so track all persons
+    if len(target_person) <= 0:
+        resp = Response(json.dumps(detected_data))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp    
     # if there are some detected data
     if 'detection' in detected_data and len(detected_data['detection']) > 0:
         for data in detected_data['detection']:

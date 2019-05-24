@@ -10,8 +10,10 @@ import json
 import datetime
 import requests
 
-LOGIN_URL = 'http://18.179.207.49/zm/api/host/login.json?user=admin&pass=admin'
-ZM_STREAM_URL = 'http://18.179.207.49/zm/cgi-bin/nph-zms'
+ZM_URL = 'http://18.179.207.49/zm'
+ZM_STREAM_URL = f'{ZM_URL}/cgi-bin/nph-zms'
+LOGIN_URL = f'{ZM_URL}/api/host/login.json?user=admin&pass=admin'
+
 
 
 class Camera(object):
@@ -79,8 +81,9 @@ class Camera(object):
 
     @classmethod
     def _thread(cls, stream_url, monitor=0):
-        print('[INFO] openning video stream...')
+        # login to zm server first
         r = requests.post(url=LOGIN_URL)
+        print('[INFO] openning video stream...')
         auth_info = r.json()['credentials']
         new_url = f'{ZM_STREAM_URL}?mode=jpeg&monitor={monitor}&{auth_info}'
         # start streaming ưith zm stream url
@@ -191,7 +194,7 @@ class Camera(object):
                 ret, jpeg = cv2.imencode('.jpg', frame)
                 cls.frame_list[str(monitor)] = jpeg.tobytes()
             finally:
-                time.sleep(0.05)
+                time.sleep(0.25)
 
         print('[INFO] releasing stream resources...')
         cap.release
@@ -208,8 +211,7 @@ class Camera(object):
 
         # construct a blob from the image
         imageBlob = cv2.dnn.blobFromImage(
-            cv2.resize(frame, (300, 300)), 1.0, (300, 300),
-            (104.0, 177.0, 123.0), swapRB=False, crop=False)
+            frame, 1.0, (300, 300), (104.0, 177.0, 123.0), swapRB=False, crop=False)
 
         # apply OpenCV's deep learning-based face detector to localize
         # faces in the input image
