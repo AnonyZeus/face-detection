@@ -76,7 +76,7 @@ for (i, imagePath) in enumerate(imagePaths):
     bboxes = face_detector.predict(image, 0.9)
 
     # ensure at least one face was found
-    print('[INFO] number of detected faces: {}'.format(len(bboxes))
+    print('[INFO] number of detected faces: {}'.format(len(bboxes)))
     if len(bboxes) > 0:
         for xb, yb, wb, hb, pb in bboxes:
             startX = int(xb - wb/2)
