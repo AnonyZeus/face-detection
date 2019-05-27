@@ -44,8 +44,8 @@ class Camera(object):
             #     time.sleep(0)
 
     def __init__(self):
-        print('[INFO] loading face detector...')
         if Camera.detector is None:
+            print('[INFO] loading face detector...')
             Camera.detector = FaceDetector()
 
         if Camera.embedder is None:
@@ -115,9 +115,10 @@ class Camera(object):
                 # frame = imutils.resize(frame, width=600)
                 # (h, w) = frame.shape[:2]
 
-                bboxes = cls.detector.predict(frame, 0.9)
+                bboxes = cls.detector.predict(frame, 0.90)
 
                 # ensure at least one face was found
+                print('[INFO] detected faces: {}'.format(len(bboxes)))
                 if len(bboxes) > 0:
                     for xb, yb, wb, hb, pb in bboxes:
                         startX = int(xb - wb/2)
@@ -170,7 +171,7 @@ class Camera(object):
                         json_data['name'] = '{}'.format(name)
                         json_data['time'] = datetime.datetime.now().strftime(
                             '%Y-%m-%d %H:%M:%S')
-                        json_data['confidence'] = str(pb)
+                        json_data['confidence'] = str(proba)
                         response_data['detection'].append(json_data)
 
                 cls.json_list[str(monitor)] = response_data
@@ -190,7 +191,7 @@ class Camera(object):
         # resize the frame to have a width of 600 pixels (while
         # maintaining the aspect ratio), and then grab the image
         # dimensions
-        frame = imutils.resize(frame, width=600)
+        # frame = imutils.resize(frame, width=600)
         try:
             bboxes = Camera.detector.predict(frame, 0.9)
 
