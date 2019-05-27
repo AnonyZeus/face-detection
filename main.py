@@ -16,27 +16,27 @@ app = Flask(__name__)
 # app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-@app.route('/')
-@app.route('/stream_video')
-def index():
-    monitor = request.args.get('id')
-    return render_template('index.html', monitor=monitor)
+# @app.route('/')
+# @app.route('/stream_video')
+# def index():
+#     monitor = request.args.get('id')
+#     return render_template('index.html', monitor=monitor)
 
 
-def gen(camera, monitor):
-    while True:
-        frame = camera.get_frame(monitor)
-        if frame is not None:
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+# def gen(camera, monitor):
+#     while True:
+#         frame = camera.get_frame(monitor)
+#         if frame is not None:
+#             yield (b'--frame\r\n'
+#                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 
 
-@app.route('/video_feed/<int:id>')
-def video_feed(id):
-    resp = Response(gen(Camera(), id),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-    resp.headers['Access-Control-Allow-Origin'] = '*'
-    return resp
+# @app.route('/video_feed/<int:id>')
+# def video_feed(id):
+#     resp = Response(gen(Camera(), id),
+#                     mimetype='multipart/x-mixed-replace; boundary=frame')
+#     resp.headers['Access-Control-Allow-Origin'] = '*'
+#     return resp
 
 
 @app.route('/view_json', methods=['POST'])

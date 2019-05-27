@@ -61,11 +61,11 @@ class Camera(object):
         if Camera.le is None:
             Camera.le = pickle.loads(open('output/le.pickle', 'rb').read())
 
-    def get_frame(self, monitor):
-        try:
-            return self.frame_list[str(monitor)]
-        except:
-            return None
+    # def get_frame(self, monitor):
+    #     try:
+    #         return self.frame_list[str(monitor)]
+    #     except:
+    #         return None
 
     def get_json(self, monitor):
         try:
@@ -167,19 +167,19 @@ class Camera(object):
 
                         # draw the bounding box of the face along with the
                         # associated probability
-                        text = '{}: {:.2f}%'.format(name, proba * 100)
+                        # text = '{}: {:.2f}%'.format(name, proba * 100)
                         # text = f'{name}さんを検知しました。'
-                        y = startY - 10 if startY - 10 > 10 else startY + 10
+                        # y = startY - 10 if startY - 10 > 10 else startY + 10
                         # cv2.rectangle(frame, (startX, startY), (endX, endY),
                         #               (0, 0, 255), 2)
                         # cv2.putText(frame, text, (startX, y),
                         #             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
-                        frame_pil = Image.fromarray(frame)
-                        draw = ImageDraw.Draw(frame_pil)
-                        font = ImageFont.truetype('hgrpp1.ttc', 12)
-                        draw.text((startX, y),  text,
-                                  font=font, fill=(0, 0, 0))
-                        frame = np.array(frame_pil)
+                        # frame_pil = Image.fromarray(frame)
+                        # draw = ImageDraw.Draw(frame_pil)
+                        # font = ImageFont.truetype('hgrpp1.ttc', 12)
+                        # draw.text((startX, y),  text,
+                        #           font=font, fill=(0, 0, 0))
+                        # frame = np.array(frame_pil)
                         # top = top + 20
 
                         json_data = {}
@@ -191,8 +191,8 @@ class Camera(object):
 
                 cls.json_list[str(monitor)] = response_data
 
-                ret, jpeg = cv2.imencode('.jpg', frame)
-                cls.frame_list[str(monitor)] = jpeg.tobytes()
+                # ret, jpeg = cv2.imencode('.jpg', frame)
+                # cls.frame_list[str(monitor)] = jpeg.tobytes()
             finally:
                 time.sleep(0.25)
 
