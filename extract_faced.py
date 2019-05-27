@@ -64,7 +64,7 @@ for (i, imagePath) in enumerate(imagePaths):
     # extract the person name from the image path
     print('[INFO] processing image {}/{}'.format(i + 1,
                                                     len(imagePaths)))
-    print('[INFO] image: {}'.format(imagePath)
+    print('[INFO] image: {}'.format(imagePath))
     name = imagePath.split(os.path.sep)[-2]
 
     # load the image, resize it to have a width of 600 pixels (while
