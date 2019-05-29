@@ -18,7 +18,6 @@ ZM_STREAM_URL = f'{ZM_URL}/cgi-bin/nph-zms'
 LOGIN_URL = f'{ZM_URL}/api/host/login.json?user=admin&pass=admin'
 
 
-
 class Camera(object):
     thread_list = {}
     json_list = {}
@@ -87,7 +86,7 @@ class Camera(object):
         print('[INFO] openning video stream...')
         auth_info = r.json()['credentials']
         new_url = f'{ZM_STREAM_URL}?mode=jpeg&monitor={monitor}&{auth_info}'
-        # start streaming ưith zm stream url
+        # start streaming with zm stream url
         cap = cv2.VideoCapture(new_url)
         if cap is None or not cap.isOpened():
             # try to open alternative url
@@ -188,14 +187,16 @@ class Camera(object):
     def detect_image(self, frame):
         response_data = {}
         response_data['detection'] = []
+        response_list = []
         # resize the frame to have a width of 600 pixels (while
         # maintaining the aspect ratio), and then grab the image
         # dimensions
         # frame = imutils.resize(frame, width=600)
         try:
-            bboxes = Camera.detector.predict(frame, 0.9)
+            bboxes = Camera.detector.predict(frame, 0.90)
 
             # ensure at least one face was found
+            print('[INFO] detected faces: {}'.format(len(bboxes)))
             if len(bboxes) > 0:
                 for xb, yb, wb, hb, pb in bboxes:
                     startX = int(xb - wb/2)
@@ -210,6 +211,7 @@ class Camera(object):
                     # ensure the face width and height are sufficiently large
                     # if fW < 20 or fH < 20:
                     #     continue
+
                     # construct a blob for the face ROI, then pass the blob
                     # through our face embedding model to obtain the 128-d
                     # quantification of the face
@@ -226,11 +228,45 @@ class Camera(object):
                     if proba >= 0.8:
                         name = Camera.le.classes_[j]
 
-                    data = {}
-                    data['name'] = name
-                    data['time'] = datetime.datetime.now().strftime(
-                        "%Y-%m-%d %H:%M:%S")
-                    data['confidence'] = str(proba)
-                    response_data['detection'].append(data)
+                    if name not in response_list:
+                        response_list.append(name)
+                    json_data = {}
+                    json_data['name'] = '{}'.format(name)
+                    json_data['time'] = datetime.datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S')
+                    json_data['confidence'] = str(proba)
+                    response_data['detection'].append(json_data)
         finally:
+            return response_data, response_list
+
+    def detect_video(self, event_id):
+        response_data = {}
+        response_data['detection'] = []
+        # login to zm server first
+        r = requests.post(url=LOGIN_URL)
+        print('[INFO] openning video stream...')
+        auth_info = r.json()['credentials']
+        new_url = f'{ZM_URL}/index.php?mode=mpeg&eid={event_id}&view=view_video&{auth_info}'
+        # start streaming with zm stream url
+        cap = cv2.VideoCapture(new_url)
+        if cap is None or not cap.isOpened():
+            print('[ERROR] unable to open remote stream...')
             return response_data
+        # cap = cv2.VideoCapture(0)
+        print('[INFO] starting face detection...')
+        result_list = []
+        while(cap.isOpened()):
+            try:
+                ret, frame = cap.read()
+            except:
+                return response_data
+            finally:
+                if not ret:
+                    continue
+                detect_data, detect_list = self.detect_image(frame)
+                for detect_id in detect_list:
+                    if detect_id not in result_list:
+                        result_list.append(detect_id)
+
+        response_data['detection'] = result_list
+        return response_data

@@ -35,6 +35,7 @@ for line in ssh.stdout:
     # read user and image path
     user_name = line_param[0]
     file_path = line_param[1]
+    file_path = file_path.replace('\\', '/')
 
     file_name = ntpath.basename(file_path) + '.jpg'
 

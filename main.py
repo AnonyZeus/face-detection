@@ -3,40 +3,19 @@
 import requests
 from train_model import train_model
 from extract_embeddings import extract_data
-from detector_thread import Camera
+from detector_thread_faced import Camera
 from flask import Flask, render_template, Response, request
 import cv2
 import numpy
 import json
 
-# UPLOAD_FOLDER = 'uploads'
-# ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-
 app = Flask(__name__)
-# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-# @app.route('/')
-# @app.route('/stream_video')
-# def index():
-#     monitor = request.args.get('id')
-#     return render_template('index.html', monitor=monitor)
-
-
-# def gen(camera, monitor):
-#     while True:
-#         frame = camera.get_frame(monitor)
-#         if frame is not None:
-#             yield (b'--frame\r\n'
-#                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
-
-
-# @app.route('/video_feed/<int:id>')
-# def video_feed(id):
-#     resp = Response(gen(Camera(), id),
-#                     mimetype='multipart/x-mixed-replace; boundary=frame')
-#     resp.headers['Access-Control-Allow-Origin'] = '*'
-#     return resp
+def gen_response(response_data):
+    resp = Response(json.dumps(response_data))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 
 @app.route('/view_json', methods=['POST'])
@@ -45,9 +24,7 @@ def view_json():
     response_data['detection'] = []
     # validate request data
     if 'id' not in request.form:
-        resp = Response(json.dumps(response_data))
-        resp.headers['Access-Control-Allow-Origin'] = '*'
-        return resp
+        return gen_response(response_data)
 
     monitor = request.form['id']
     detected_data = Camera().get_json(monitor)
@@ -57,9 +34,8 @@ def view_json():
         target_person = request.form['targets']
     # if there is no target, so track all persons
     if len(target_person) <= 0:
-        resp = Response(json.dumps(detected_data))
-        resp.headers['Access-Control-Allow-Origin'] = '*'
-        return resp    
+        return gen_response(detected_data)
+
     # if there are some detected data
     if 'detection' in detected_data and len(detected_data['detection']) > 0:
         for data in detected_data['detection']:
@@ -67,9 +43,7 @@ def view_json():
             if data['name'] in target_person:
                 response_data['detection'].append(data)
 
-    resp = Response(json.dumps(response_data))
-    resp.headers['Access-Control-Allow-Origin'] = '*'
-    return resp
+    return gen_response(response_data)
 
 
 @app.route('/do_training', methods=['GET'])
@@ -103,11 +77,11 @@ def confirm_image():
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
-            return Response(json.dumps(response_data))
+            return gen_response(response_data)
         file = request.files['file']
         # check if file name is empty
         if file.filename == '':
-            return Response(json.dumps(response_data))
+            return gen_response(response_data)
 
         # check file validate
         # if file and allowed_file(file.filename):
@@ -118,9 +92,36 @@ def confirm_image():
             # convert numpy array to image
             img = cv2.imdecode(npimg, cv2.IMREAD_UNCHANGED)
             response = Camera().detect_image(img)
-            return Response(json.dumps(response))
+            return gen_response(response)
 
-    return Response(json.dumps(response_data))
+    return gen_response(response_data)
+
+
+@app.route('/valid_video', methods=['POST', 'PUT'])
+def confirm_video():
+    response_data = {}
+    response_data['detection'] = []
+    if request.method != 'POST' or 'event_id' not in request.form:
+        return gen_response(response_data)
+
+    event_id = request.form['event_id']
+    detected_data = Camera().detect_video(event_id)
+
+    target_person = []
+    if 'targets' in request.form:
+        target_person = request.form['targets']
+    # if there is no target, so track all persons
+    if len(target_person) <= 0:
+        return gen_response(detected_data)
+
+    # if there are some detected data
+    if 'detection' in detected_data and len(detected_data['detection']) > 0:
+        for data in detected_data['detection']:
+            # if detected data in in targeted persons
+            if data in target_person:
+                response_data['detection'].append(data)
+
+    return gen_response(response_data)
 
 # def allowed_file(filename):
 #     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
