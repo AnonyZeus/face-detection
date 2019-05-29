@@ -114,7 +114,7 @@ class Camera(object):
                 # frame = imutils.resize(frame, width=600)
                 # (h, w) = frame.shape[:2]
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                bboxes = cls.detector.predict(frame, 0.89)
+                bboxes = cls.detector.predict(frame, 0.90)
 
                 # ensure at least one face was found
                 print('[INFO] detected faces: {}'.format(len(bboxes)))
@@ -181,7 +181,7 @@ class Camera(object):
                 time.sleep(0.33)
 
         print('[INFO] releasing stream resources...')
-        cap.release
+        cap.release()
         cls.thread_list[str(monitor)] = None
 
     def detect_image(self, frame):
@@ -194,7 +194,7 @@ class Camera(object):
         # frame = imutils.resize(frame, width=600)
         try:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            bboxes = Camera.detector.predict(frame, 0.89)
+            bboxes = Camera.detector.predict(frame, 0.90)
 
             # ensure at least one face was found
             print('[INFO] detected faces: {}'.format(len(bboxes)))
@@ -254,19 +254,20 @@ class Camera(object):
             print('[ERROR] unable to open remote stream...')
             return response_data
         # cap = cv2.VideoCapture(0)
-        print('[INFO] starting face detection...')
+        print('[INFO] starting video detection...')
         result_list = []
         while(cap.isOpened()):
             try:
                 ret, frame = cap.read()
                 if not ret:
-                    continue
+                    break
                 detect_data, detect_list = self.detect_image(frame)
                 for detect_id in detect_list:
                     if detect_id not in result_list:
                         result_list.append(detect_id)
             except:
                 return response_data
-
+        print('[INFO] finish video detection...')
+        cap.release()
         response_data['detection'] = result_list
         return response_data
