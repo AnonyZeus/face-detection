@@ -258,15 +258,14 @@ class Camera(object):
         while(cap.isOpened()):
             try:
                 ret, frame = cap.read()
-            except:
-                return response_data
-            finally:
                 if not ret:
                     continue
                 detect_data, detect_list = self.detect_image(frame)
                 for detect_id in detect_list:
                     if detect_id not in result_list:
                         result_list.append(detect_id)
+            except:
+                return response_data
 
         response_data['detection'] = result_list
         return response_data
