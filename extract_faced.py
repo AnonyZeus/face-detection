@@ -72,8 +72,8 @@ for (i, imagePath) in enumerate(imagePaths):
     # dimensions
     image = cv2.imread(imagePath)
     # image = imutils.resize(image, width=600)
-
-    bboxes = face_detector.predict(image, 0.9)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    bboxes = face_detector.predict(image, 0.89)
 
     # ensure at least one face was found
     print('[INFO] number of detected faces: {}'.format(len(bboxes)))

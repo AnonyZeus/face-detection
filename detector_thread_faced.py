@@ -113,8 +113,8 @@ class Camera(object):
                 # dimensions
                 # frame = imutils.resize(frame, width=600)
                 # (h, w) = frame.shape[:2]
-
-                bboxes = cls.detector.predict(frame, 0.90)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                bboxes = cls.detector.predict(frame, 0.89)
 
                 # ensure at least one face was found
                 print('[INFO] detected faces: {}'.format(len(bboxes)))
@@ -193,7 +193,8 @@ class Camera(object):
         # dimensions
         # frame = imutils.resize(frame, width=600)
         try:
-            bboxes = Camera.detector.predict(frame, 0.90)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            bboxes = Camera.detector.predict(frame, 0.89)
 
             # ensure at least one face was found
             print('[INFO] detected faces: {}'.format(len(bboxes)))
