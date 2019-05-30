@@ -13,13 +13,13 @@ def read_config():
     if 'FILES' not in config.sections():
         file_paths['detector_path'] = os.path.join(current_dir, 'output', 'embeddings.pickle')
         file_paths['embedder_path'] = os.path.join(current_dir, 'openface_nn4.small2.v1.t7')
-        file_paths['recognier_path'] = os.path.join(current_dir, 'output', 'recognizer.pickle')
+        file_paths['recognizer_path'] = os.path.join(current_dir, 'output', 'recognizer.pickle')
         file_paths['le_path'] = os.path.join(current_dir, 'output', 'le.pickle')
         return file_paths
     else:
         file_paths['detector_path'] = config['FILES']['DETECTOR']
         file_paths['embedder_path'] = config['FILES']['EMBEDDER']
-        file_paths['recognier_path'] = config['FILES']['RECOGNIZER']
+        file_paths['recognizer_path'] = config['FILES']['RECOGNIZER']
         file_paths['le_path'] = config['FILES']['LE']
 
     if 'CONFIGS' not in config.sections():
