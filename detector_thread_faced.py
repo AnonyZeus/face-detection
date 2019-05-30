@@ -68,7 +68,7 @@ class Camera(object):
             Camera.le = pickle.loads(open('output/le.pickle', 'rb').read())
 
         print('[INFO] Confidence value is set to {}'.format(configs['confidence']))
-        Camera.confidence = configs['confidence']
+        Camera.confidence = float(configs['confidence'])
 
     # def get_frame(self, monitor):
     #     try:
