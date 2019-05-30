@@ -13,6 +13,8 @@ import requests
 from faced import FaceDetector
 from faced.utils import annotate_image
 
+from config_reader import read_config
+
 ZM_URL = 'http://18.179.207.49/zm'
 ZM_STREAM_URL = f'{ZM_URL}/cgi-bin/nph-zms'
 LOGIN_URL = f'{ZM_URL}/api/host/login.json?user=admin&pass=admin'
@@ -28,6 +30,8 @@ class Camera(object):
     embedder = None
     recognizer = None
     le = None
+
+    confidence = 0.90
     # is_ended = False
 
     def initialize(self, monitor, stream_url):
@@ -43,23 +47,28 @@ class Camera(object):
             #     time.sleep(0)
 
     def __init__(self):
+        file_paths, configs = read_config()
         if Camera.detector is None:
             print('[INFO] loading face detector...')
             Camera.detector = FaceDetector()
 
         if Camera.embedder is None:
             # load our serialized face embedding model from disk
-            print('[INFO] loading face recognizer...')
-            Camera.embedder = cv2.dnn.readNetFromTorch(
-                'openface_nn4.small2.v1.t7')
+            print('[INFO] loading embedder from {}'.format(file_paths['embedder_path']))
+            Camera.embedder = cv2.dnn.readNetFromTorch(file_paths['embedder_path'])
 
         if Camera.recognizer is None:
             # load the actual face recognition model along with the label encoder
+            print('[INFO] loading face recognizer from {}'.format(file_paths['recognizer_path']))
             Camera.recognizer = pickle.loads(
                 open('output/recognizer.pickle', 'rb').read())
 
         if Camera.le is None:
+            print('[INFO] loading le from {}'.format(file_paths['le_path']))
             Camera.le = pickle.loads(open('output/le.pickle', 'rb').read())
+
+        print('[INFO] Confidence value is set to {}'.format(configs['confidence']))
+        Camera.confidence = configs['confidence']
 
     # def get_frame(self, monitor):
     #     try:
@@ -114,7 +123,7 @@ class Camera(object):
                 # frame = imutils.resize(frame, width=600)
                 # (h, w) = frame.shape[:2]
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                bboxes = cls.detector.predict(frame, 0.90)
+                bboxes = cls.detector.predict(frame, cls.confidence)
 
                 # ensure at least one face was found
                 print('[INFO] detected faces: {}'.format(len(bboxes)))
@@ -194,7 +203,7 @@ class Camera(object):
         # frame = imutils.resize(frame, width=600)
         try:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            bboxes = Camera.detector.predict(frame, 0.90)
+            bboxes = Camera.detector.predict(frame, Camera.confidence)
 
             # ensure at least one face was found
             print('[INFO] detected faces: {}'.format(len(bboxes)))

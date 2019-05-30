@@ -13,6 +13,8 @@ import os
 from faced import FaceDetector
 from faced.utils import annotate_image
 
+from config_reader import read_config
+
 
 def list_images(basePath, contains=None):
     # return the set of files that are valid
@@ -38,17 +40,20 @@ def list_files(basePath, validExts=None, contains=None):
                 imagePath = os.path.join(rootDir, filename)
                 yield imagePath
 
+file_paths, configs = read_config()
+
 # load our serialized face detector from disk
 print('[INFO] loading face detector...')
 face_detector = FaceDetector()
 
 # load our serialized face embedding model from disk
-print('[INFO] loading face recognizer...')
-embedder = cv2.dnn.readNetFromTorch('openface_nn4.small2.v1.t7')
+print('[INFO] loading embedder from {}'.format(file_paths['embedder_path']))
+embedder = cv2.dnn.readNetFromTorch(file_paths['embedder_path'])
 
 # grab the paths to the input images in our dataset
 print('[INFO] quantifying faces...')
-imagePaths = list(list_images('dataset'))
+current_dir = os.path.dirname(os.path.realpath(__file__))
+imagePaths = list(list_images(os.path.join(current_dir, 'dataset')))
 
 # initialize our lists of extracted facial embeddings and
 # corresponding people names
@@ -73,7 +78,7 @@ for (i, imagePath) in enumerate(imagePaths):
     image = cv2.imread(imagePath)
     # image = imutils.resize(image, width=600)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    bboxes = face_detector.predict(image, 0.89)
+    bboxes = face_detector.predict(image, configs['confidence'])
 
     # ensure at least one face was found
     print('[INFO] number of detected faces: {}'.format(len(bboxes)))
@@ -109,6 +114,6 @@ for (i, imagePath) in enumerate(imagePaths):
 # dump the facial embeddings + names to disk
 print('[INFO] serializing {} encodings...'.format(total))
 data = {'embeddings': knownEmbeddings, 'names': knownNames}
-f = open('output/embeddings_faced.pickle', 'wb')
+f = open(os.path.join(current_dir, 'output', 'embeddings_faced.pickle'), 'wb')
 f.write(pickle.dumps(data))
 f.close()
