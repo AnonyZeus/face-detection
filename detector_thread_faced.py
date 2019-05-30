@@ -154,9 +154,10 @@ class Camera(object):
                         preds = cls.recognizer.predict_proba(vec)[0]
                         j = np.argmax(preds)
                         proba = preds[j]
-                        name = 0
-                        if proba >= 0.8:
-                            name = cls.le.classes_[j]
+                        name = cls.le.classes_[j]
+                        # name = 0
+                        # if proba >= 0.8:
+                        #     name = cls.le.classes_[j]
 
                         # draw the bounding box of the face along with the
                         # associated probability
@@ -234,9 +235,10 @@ class Camera(object):
                     preds = Camera.recognizer.predict_proba(vec)[0]
                     j = np.argmax(preds)
                     proba = preds[j]
-                    name = 0
-                    if proba >= 0.8:
-                        name = Camera.le.classes_[j]
+                    name = Camera.le.classes_[j]
+                    # name = 0
+                    # if proba >= 0.8:
+                    #     name = Camera.le.classes_[j]
 
                     if name not in response_list:
                         response_list.append(name)
