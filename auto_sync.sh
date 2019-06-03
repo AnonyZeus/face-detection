@@ -1,4 +1,6 @@
 #!/bin/bash
+eval $(ssh-agent)
+ssh-add aim-cloud-01.pem
 cd /home/ubuntu/face-detection/
 python auto_sync.py -p /home/ubuntu/aim-cloud/application/webroot/files/user_images_list.txt -i ubuntu@54.238.198.114 -d /home/ubuntu/face-detection/dataset -f true
 # cd /home/ubuntu/face-detection && cp -r 0 dataset/
