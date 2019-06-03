@@ -80,7 +80,9 @@ class Camera(object):
         try:
             return self.json_list[str(monitor)]
         except:
-            return {}
+            response_data = {}
+            response_data['detection'] = []
+            return response_data
 
     def change_stream_url(self, monitor, stream_url):
         if monitor in Camera.thread_list:
@@ -94,7 +96,7 @@ class Camera(object):
         r = requests.post(url=LOGIN_URL)
         print('[INFO] openning video stream...')
         auth_info = r.json()['credentials']
-        new_url = f'{ZM_STREAM_URL}?mode=jpeg&monitor={monitor}&{auth_info}'
+        new_url = f'{ZM_STREAM_URL}?mode=jpeg&maxfps=5&monitor={monitor}&{auth_info}'
         # start streaming with zm stream url
         cap = cv2.VideoCapture(new_url)
         if cap is None or not cap.isOpened():
@@ -120,7 +122,7 @@ class Camera(object):
                 # resize the frame to have a width of 600 pixels (while
                 # maintaining the aspect ratio), and then grab the image
                 # dimensions
-                # frame = imutils.resize(frame, width=600)
+                frame = imutils.resize(frame, width=600)
                 # (h, w) = frame.shape[:2]
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 bboxes = cls.detector.predict(frame, cls.confidence)
@@ -156,25 +158,8 @@ class Camera(object):
                         proba = preds[j]
                         # name = cls.le.classes_[j]
                         name = 0
-                        if proba >= 0.7:
+                        if proba >= 0.6:
                             name = cls.le.classes_[j]
-
-                        # draw the bounding box of the face along with the
-                        # associated probability
-                        # text = '{}: {:.2f}%'.format(name, proba * 100)
-                        # text = f'{name}さんを検知しました。'
-                        # y = startY - 10 if startY - 10 > 10 else startY + 10
-                        # cv2.rectangle(frame, (startX, startY), (endX, endY),
-                        #               (0, 0, 255), 2)
-                        # cv2.putText(frame, text, (startX, y),
-                        #             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
-                        # frame_pil = Image.fromarray(frame)
-                        # draw = ImageDraw.Draw(frame_pil)
-                        # font = ImageFont.truetype('hgrpp1.ttc', 12)
-                        # draw.text((startX, y),  text,
-                        #           font=font, fill=(0, 0, 0))
-                        # frame = np.array(frame_pil)
-                        # top = top + 20
 
                         json_data = {}
                         json_data['name'] = '{}'.format(name)
@@ -188,7 +173,7 @@ class Camera(object):
                 # ret, jpeg = cv2.imencode('.jpg', frame)
                 # cls.frame_list[str(monitor)] = jpeg.tobytes()
             finally:
-                time.sleep(0.33)
+                time.sleep(0.05)
 
         print('[INFO] releasing stream resources...')
         cap.release()
