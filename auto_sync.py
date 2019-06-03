@@ -6,6 +6,15 @@ import shutil
 from extract_embeddings import extract_data
 from train_model import train_model
 
+def copytree(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
+
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument('-p', '--path', required=True,
@@ -23,6 +32,8 @@ args = vars(ap.parse_args())
 if args['force']:
     shutil.rmtree(args['dataset'])
     os.mkdir(args['dataset'])
+
+copytree('0', 'dataset')
 
 # start parsing guidance file
 ssh = subprocess.Popen(['ssh', args['ipaddress'], 'cat',
