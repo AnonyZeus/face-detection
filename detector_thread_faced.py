@@ -125,7 +125,7 @@ class Camera(object):
         cap = None
         # start trying to connect to streaming resource
         while (cap is None or not cap.isOpened) and retry_count < cls.max_retry_count:
-            cap = connect_stream(monitor, cls.change_stream_url[str(monitor)])
+            cap = connect_stream(monitor, cls.stream_url_list[str(monitor)])
             retry_count += 1
         if cap is None or not cap.isOpened():
             print('[ERROR] unable to open remote stream...')
@@ -150,7 +150,7 @@ class Camera(object):
                         retry_count = 0
                         while (cap is None or not cap.isOpened) and retry_count < cls.max_retry_count:
                             cap = connect_stream(
-                                monitor, cls.change_stream_url[str(monitor)])
+                                monitor, cls.stream_url_list[str(monitor)])
                             retry_count += 1
                         if cap is None or not cap.isOpened():
                             print('[ERROR] unable to open remote stream...')
