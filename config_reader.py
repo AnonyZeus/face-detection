@@ -24,7 +24,9 @@ def read_config():
 
     if 'CONFIGS' not in config.sections():
         configs['confidence'] = 0.9
+        configs['max_retry_count'] = 10
     else:
         configs['confidence'] = config['CONFIGS']['CONFIDENCE']
+        configs['max_retry_count'] = config['CONFIGS']['MAX_RETRY_COUNT']
 
         return file_paths, configs

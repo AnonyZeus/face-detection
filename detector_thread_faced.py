@@ -20,6 +20,20 @@ ZM_STREAM_URL = f'{ZM_URL}/cgi-bin/nph-zms'
 LOGIN_URL = f'{ZM_URL}/api/host/login.json?user=admin&pass=admin'
 
 
+def connect_stream(monitor, stream_url):
+    r = requests.post(url=LOGIN_URL)
+    print('[INFO] openning video stream...')
+    auth_info = r.json()['credentials']
+    new_url = f'{ZM_STREAM_URL}?mode=jpeg&maxfps=5&monitor={monitor}&{auth_info}'
+    # start streaming with zm stream url
+    cap = cv2.VideoCapture(new_url)
+    if cap is None or not cap.isOpened():
+        # try to open alternative url
+        print('[ERROR] trying to open direct url...')
+        cap = cv2.VideoCapture(stream_url)
+    return cap
+
+
 class Camera(object):
     thread_list = {}
     json_list = {}
@@ -30,6 +44,8 @@ class Camera(object):
     embedder = None
     recognizer = None
     le = None
+    max_retry_count = 0
+    stream_url_list = {}
 
     confidence = 0.90
     # is_ended = False
@@ -54,12 +70,15 @@ class Camera(object):
 
         if Camera.embedder is None:
             # load our serialized face embedding model from disk
-            print('[INFO] loading embedder from {}'.format(file_paths['embedder_path']))
-            Camera.embedder = cv2.dnn.readNetFromTorch(file_paths['embedder_path'])
+            print('[INFO] loading embedder from {}'.format(
+                file_paths['embedder_path']))
+            Camera.embedder = cv2.dnn.readNetFromTorch(
+                file_paths['embedder_path'])
 
         if Camera.recognizer is None:
             # load the actual face recognition model along with the label encoder
-            print('[INFO] loading face recognizer from {}'.format(file_paths['recognizer_path']))
+            print('[INFO] loading face recognizer from {}'.format(
+                file_paths['recognizer_path']))
             Camera.recognizer = pickle.loads(
                 open('output/recognizer.pickle', 'rb').read())
 
@@ -67,8 +86,11 @@ class Camera(object):
             print('[INFO] loading le from {}'.format(file_paths['le_path']))
             Camera.le = pickle.loads(open('output/le.pickle', 'rb').read())
 
-        print('[INFO] Confidence value is set to {}'.format(configs['confidence']))
+        print('[INFO] Confidence value is set to {}'.format(
+            configs['confidence']))
         Camera.confidence = float(configs['confidence'])
+
+        Camera.max_retry_count = int(configs['max_retry_count'])
 
     # def get_frame(self, monitor):
     #     try:
@@ -88,6 +110,7 @@ class Camera(object):
         if monitor in Camera.thread_list:
             return None
 
+        Camera.stream_url_list[str(monitor)] = stream_url
         self.initialize(monitor, stream_url)
 
     @classmethod
@@ -97,19 +120,20 @@ class Camera(object):
         print('[INFO] openning video stream...')
         auth_info = r.json()['credentials']
         new_url = f'{ZM_STREAM_URL}?mode=jpeg&maxfps=5&monitor={monitor}&{auth_info}'
-        # start streaming with zm stream url
-        cap = cv2.VideoCapture(new_url)
+
+        retry_count = 0
+        cap = None
+        # start trying to connect to streaming resource
+        while (cap is None or not cap.isOpened) and retry_count < cls.max_retry_count:
+            cap = connect_stream(monitor, cls.change_stream_url[str(monitor)])
+            retry_count += 1
         if cap is None or not cap.isOpened():
-            # try to open alternative url
-            print('[ERROR] trying to open direct url...')
-            cap = cv2.VideoCapture(stream_url)
-            if cap is None or not cap.isOpened():
-                print('[ERROR] unable to open remote stream...')
-                cap.release
-                cls.thread_list[str(monitor)] = None
-                return
-        # cap = cv2.VideoCapture(0)
+            print('[ERROR] unable to open remote stream...')
+            cls.thread_list[str(monitor)] = None
+            return
+
         print('[INFO] starting face detection...')
+        cap_failed_count = 0
         while True:
             try:
                 response_data = {}
@@ -117,6 +141,21 @@ class Camera(object):
                 ret, frame = cap.read()
                 #ret, frame = camera.read()
                 if not ret:
+                    cap_failed_count += 1
+                    cls.json_list[str(monitor)] = response_data
+
+                    if (cap_failed_count > cls.max_retry_count):
+                        if cap.isOpened():
+                            cap.release()
+                        retry_count = 0
+                        while (cap is None or not cap.isOpened) and retry_count < cls.max_retry_count:
+                            cap = connect_stream(
+                                monitor, cls.change_stream_url[str(monitor)])
+                            retry_count += 1
+                        if cap is None or not cap.isOpened():
+                            print('[ERROR] unable to open remote stream...')
+                            cls.thread_list[str(monitor)] = None
+                            return
                     continue
 
                 # resize the frame to have a width of 600 pixels (while
@@ -176,7 +215,8 @@ class Camera(object):
                 time.sleep(0.05)
 
         print('[INFO] releasing stream resources...')
-        cap.release()
+        if cap.isOpened():
+            cap.release()
         cls.thread_list[str(monitor)] = None
 
     def detect_image(self, frame):
