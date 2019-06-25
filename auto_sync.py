@@ -32,8 +32,9 @@ args = vars(ap.parse_args())
 if args['force']:
     shutil.rmtree(args['dataset'])
     os.mkdir(args['dataset'])
+    os.mkdir(f'{args["dataset"]}/0')
 
-copytree('0', 'dataset')
+copytree('0', 'dataset/0')
 
 # start parsing guidance file
 ssh = subprocess.Popen(['ssh', args['ipaddress'], 'cat',
