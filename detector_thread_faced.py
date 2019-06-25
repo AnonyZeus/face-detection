@@ -195,10 +195,10 @@ class Camera(object):
                         preds = cls.recognizer.predict_proba(vec)[0]
                         j = np.argmax(preds)
                         proba = preds[j]
-                        # name = cls.le.classes_[j]
-                        name = 0
-                        if proba >= 0.6:
-                            name = cls.le.classes_[j]
+                        name = cls.le.classes_[j]
+                        # name = 0
+                        # if proba >= 0.6:
+                        #     name = cls.le.classes_[j]
 
                         json_data = {}
                         json_data['name'] = '{}'.format(name)
@@ -260,10 +260,10 @@ class Camera(object):
                     preds = Camera.recognizer.predict_proba(vec)[0]
                     j = np.argmax(preds)
                     proba = preds[j]
-                    # name = Camera.le.classes_[j]
-                    name = 0
-                    if proba >= 0.6:
-                        name = Camera.le.classes_[j]
+                    name = Camera.le.classes_[j]
+                    # name = 0
+                    # if proba >= 0.6:
+                    #     name = Camera.le.classes_[j]
 
                     if name not in response_list:
                         response_list.append(name)
