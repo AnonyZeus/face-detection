@@ -97,15 +97,17 @@ def confirm_image():
     return gen_response(response_data)
 
 
-@app.route('/valid_video', methods=['POST', 'PUT'])
+@app.route('/valid_event', methods=['POST', 'PUT'])
 def confirm_video():
     response_data = {}
     response_data['detection'] = []
-    if request.method != 'POST' or 'event_id' not in request.form:
+    if request.method != 'POST' or 'event_id' not in request.form or 'monitor_id' not in request.form or 'event_date' not in request.form:
         return gen_response(response_data)
 
     event_id = request.form['event_id']
-    detected_data = Camera().detect_video(event_id)
+    monitor_id = request.form['event_id']
+    event_date = request.form['event_date']
+    detected_data = Camera().detect_video(event_id, monitor_id, event_date)
 
     target_person = []
     if 'targets' in request.form:

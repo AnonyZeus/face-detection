@@ -212,7 +212,7 @@ class Camera(object):
                 # ret, jpeg = cv2.imencode('.jpg', frame)
                 # cls.frame_list[str(monitor)] = jpeg.tobytes()
             finally:
-                time.sleep(0.05)
+                time.sleep(0.02)
 
         print('[INFO] releasing stream resources...')
         if cap.isOpened():
@@ -262,7 +262,7 @@ class Camera(object):
                     proba = preds[j]
                     # name = Camera.le.classes_[j]
                     name = 0
-                    if proba >= 0.7:
+                    if proba >= 0.6:
                         name = Camera.le.classes_[j]
 
                     if name not in response_list:
@@ -276,25 +276,18 @@ class Camera(object):
         finally:
             return response_data, response_list
 
-    def detect_video(self, event_id):
+    def detect_video(self, event_id, monitor_id, event_date):
         response_data = {}
         response_data['detection'] = []
-        # login to zm server first
-        r = requests.post(url=LOGIN_URL)
-        print('[INFO] openning video stream...')
-        auth_info = r.json()['credentials']
-        new_url = f'{ZM_URL}/index.php?mode=mpeg&eid={event_id}&view=view_video&{auth_info}'
-        # start streaming with zm stream url
-        cap = cv2.VideoCapture(new_url)
-        if cap is None or not cap.isOpened():
-            print('[ERROR] unable to open remote stream...')
-            return response_data
         # cap = cv2.VideoCapture(0)
-        print('[INFO] starting video detection...')
+        print(f'[INFO] starting face detection for event {event_id}...')
         result_list = []
-        while(cap.isOpened()):
+        start_index = 1
+        while(True):
+            img_path = f'/mnt/zoneminder/{monitor_id}/{event_date}/{event_id}/{start_index:05}-capture.jpg'
+            start_index += 1
             try:
-                ret, frame = cap.read()
+                ret, frame = cv2.imread(img_path)
                 if not ret:
                     break
                 detect_data, detect_list = self.detect_image(frame)
@@ -302,8 +295,11 @@ class Camera(object):
                     if detect_id not in result_list:
                         result_list.append(detect_id)
             except:
-                return response_data
+                print(
+                    f'[INFO] failed to parsing frame {start_index} for event {event_id}...')
+                break
+            finally:
+                time.sleep(0.02)
         print('[INFO] finish video detection...')
-        cap.release()
         response_data['detection'] = result_list
         return response_data
