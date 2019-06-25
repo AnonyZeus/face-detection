@@ -105,7 +105,7 @@ def confirm_video():
         return gen_response(response_data)
 
     event_id = request.form['event_id']
-    monitor_id = request.form['event_id']
+    monitor_id = request.form['monitor_id']
     event_date = request.form['event_date']
     detected_data = Camera().detect_video(event_id, monitor_id, event_date)
 

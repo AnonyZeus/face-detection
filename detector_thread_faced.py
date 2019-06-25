@@ -284,9 +284,10 @@ class Camera(object):
         result_list = []
         start_index = 1
         while(True):
-            img_path = f'/mnt/zoneminder/{monitor_id}/{event_date}/{event_id}/{start_index:05}-capture.jpg'
+            img_path = f'/mnt/zoneminder/events/{monitor_id}/{event_date}/{event_id}/{start_index:05}-capture.jpg'
             start_index += 1
             try:
+                print(f'[INFO] parsing {img_path}...')
                 ret, frame = cv2.imread(img_path)
                 if not ret:
                     break
