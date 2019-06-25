@@ -131,5 +131,5 @@ def confirm_video():
 
 if __name__ == '__main__':
     #app.run(host='0.0.0.0', port='5000', debug=True)
-    app.run(host='0.0.0.0', threaded=True)
-    # app.run(host='127.0.0.1', threaded=True)
+    app.run(host='0.0.0.0', threaded=True, ssl_context=('/home/ubuntu/ssl/server.crt', '/home/ubuntu/ssl/server.key'))
+    #app.run(host='0.0.0.0', threaded=True)
