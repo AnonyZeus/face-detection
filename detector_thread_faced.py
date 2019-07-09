@@ -284,24 +284,26 @@ class Camera(object):
         result_list = []
         start_index = 1
         while(True):
-            img_path = f'/mnt/zoneminder/events/{monitor_id}/{event_date}/{event_id}/{start_index:05}-capture.jpg'
+            img_path = f'/mnt/zoneminder/events/{monitor_id}/{event_date}/{event_id}/{start_index:05}-analyse.jpg'
+            if not os.path.isfile(img_path):
+                start_index += 1
+                time.sleep(0.02)
+                continue
+
             try:
                 # print(f'[INFO] parsing {img_path}...')
                 frame = cv2.imread(img_path)
-                if frame is None:
-                    break
-                detect_data, detect_list = self.detect_image(frame)
-                for detect_id in detect_list:
-                    if detect_id not in result_list:
-                        result_list.append(detect_id)
+                if frame is not None:
+                    detect_data, detect_list = self.detect_image(frame)
+                    for detect_id in detect_list:
+                        if detect_id not in result_list:
+                            result_list.append(detect_id)
             except Exception as e:
                 # print(e)
                 print(
                     f'[INFO] failed to parsing frame {start_index} for event {event_id}...')
-                break
             finally:
-                start_index += 1
-                time.sleep(0.02)
+                break
         print('[INFO] finish video detection...')
         response_data['detection'] = result_list
         return response_data
