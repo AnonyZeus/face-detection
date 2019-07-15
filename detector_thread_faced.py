@@ -18,6 +18,7 @@ from config_reader import read_config
 ZM_URL = 'http://18.179.207.49/zm'
 ZM_STREAM_URL = f'{ZM_URL}/cgi-bin/nph-zms'
 LOGIN_URL = f'{ZM_URL}/api/host/login.json?user=admin&pass=admin'
+MAX_RETRY_FRAME = 1000
 
 
 def connect_stream(monitor, stream_url):
@@ -284,8 +285,11 @@ class Camera(object):
         result_list = []
         start_index = 1
         while(True):
+            print(f'[INFO] checking still image {start_index:05}-analyse.jpg...')
             img_path = f'/mnt/zoneminder/events/{monitor_id}/{event_date}/{event_id}/{start_index:05}-analyse.jpg'
             if not os.path.isfile(img_path):
+                if start_index >= MAX_RETRY_FRAME:
+                    break
                 start_index += 1
                 time.sleep(0.02)
                 continue
